@@ -219,15 +219,21 @@ void Hydro::doCycle(
         copy(&zvol[zfirst], &zvol[zlast], &zvol0[zfirst]);
 
         // 1a. compute new mesh geometry
+        // MEMACC:ROI1
         mesh->calcCtrs(pxp, exp, zxp, sfirst, slast);
+        // MEMACC:ROI2
         mesh->calcVols(pxp, zxp, sareap, svolp, zareap, zvolp,
                 sfirst, slast);
+        // MEMACC:ROI3
         mesh->calcSurfVecs(zxp, exp, ssurfp, sfirst, slast);
+        // MEMACC:ROI4
         mesh->calcEdgeLen(pxp, elen, sfirst, slast);
+        // MEMACC:ROI5
         mesh->calcCharLen(sareap, zdl, sfirst, slast);
 
         // 2. compute point masses
         calcRho(zm, zvolp, zrp, zfirst, zlast);
+        // MEMACC:ROI6
         calcCrnrMass(zrp, zareap, smf, cmaswt, sfirst, slast);
 
         // 3. compute material state (half-advanced)
@@ -236,9 +242,14 @@ void Hydro::doCycle(
 
         // 4. compute forces
         pgas->calcForce(zp, ssurfp, sfp, sfirst, slast);
+
+        // MEMACC:ROI7
         tts->calcForce(zareap, zrp, zss, sareap, smf, ssurfp, sft,
                 sfirst, slast);
+        // MEMACC:ROI8
         qcs->calcForce(sfq, sfirst, slast);
+
+        // MEMACC:ROI9
         sumCrnrForce(sfp, sfq, sft, cftot, sfirst, slast);
     }  // for sch
     mesh->checkBadSides();
@@ -256,6 +267,7 @@ void Hydro::doCycle(
         for (int i = 0; i < bcs.size(); ++i) {
             int bfirst = bcs[i]->pchbfirst[pch];
             int blast = bcs[i]->pchblast[pch];
+            // MEMACC:ROI10
             bcs[i]->applyFixedBC(pu0, pf, bfirst, blast);
         }
 
@@ -277,12 +289,15 @@ void Hydro::doCycle(
         int zlast = mesh->schzlast[sch];
 
         // 6a. compute new mesh geometry
+        // MEMACC:ROI11
         mesh->calcCtrs(px, ex, zx, sfirst, slast);
+        // MEMACC:ROI12
         mesh->calcVols(px, zx, sarea, svol, zarea, zvol,
                 sfirst, slast);
 
         // 7. compute work
         fill(&zw[zfirst], &zw[zlast], 0.);
+        // MEMACC:ROI13
         calcWork(sfp, sfq, pu0, pu, pxp, dt, zw, zetot,
                 sfirst, slast);
     }  // for sch
